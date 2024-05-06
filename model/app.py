@@ -3,7 +3,7 @@ import random
 import cv2
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, File, UploadFile
 from model import Model
 
 app = FastAPI(debug=True)
@@ -21,8 +21,11 @@ def get_random_prediction(data: str) -> Dict:
 
 
 @app.post("/prediction")
-def get_prediction(image_bytes: bytes = Body(bytes)) -> str:
-    res = model.predict_on_imgs([image_bytes])
+def get_prediction(files: List[UploadFile] = File(...)) -> str:
+    contents = [f.file.read() for f in files]
+    names = [f.filename for f in files]
+    content_types = [f.content_type for f in files]
+    res = model.predict_on_imgs(contents, names, content_types)
     return res
 
 

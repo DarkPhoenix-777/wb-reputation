@@ -36,11 +36,8 @@ class Model():
         self.model.freeze()
 
 
-    def predict_on_imgs(self, images, image_names=None):
-        if image_names is None:
-            image_names = list(range(len(images)))
-
-        features = self.feature_extractor.get_features(images).astype(np.float32)
+    def predict_on_imgs(self, images, image_names, content_types):
+        features = self.feature_extractor.get_features(images, image_names, content_types).astype(np.float32)
         preds = self.model.forward(features).tolist()
         res = []
         for i in range(len(images)):
