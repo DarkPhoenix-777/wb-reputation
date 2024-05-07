@@ -7,7 +7,7 @@ from transformers import DistilBertModel, DistilBertTokenizer
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class Text_encoder():
-    """get image + text embeddings"""
+    """get text embeddings"""
     def __init__(self,
                  text_model_name: str = "distilbert-base-uncased") -> None:
 
@@ -25,12 +25,12 @@ class Text_encoder():
         Parameters
         ----------
         batch : List[str]
-            list of
+            list of texts
 
         Returns
         -------
         List[np.ndarray]
-            list of tokenized text
+            list of tokenized texts
         """
         max_length = 256
         tokenized_texts = []
@@ -70,25 +70,25 @@ class Text_encoder():
         return features
 
 
-    def get_text_embeddings(self, imgs_list: List[np.ndarray], batch_size=64):
+    def get_text_embeddings(self, texts_list: List[str], batch_size=64) -> np.ndarray:
         """
         Get text embeddings for texts from images
 
         Parameters
         ----------
-        imgs_list : List[np.ndarray]
-            list of images
+        texts_list : List[str]
+            list of texts
         batch_size : int
             batch size for text model
 
         Returns
         -------
         np.ndarray
-            text embeddings
+            2d array of text embeddings
         """
         text_features = []
-        for i in range(0, len(imgs_list), batch_size):
-            batch = imgs_list[i:min(i+batch_size, len(imgs_list))]
+        for i in range(0, len(texts_list), batch_size):
+            batch = texts_list[i:min(i+batch_size, len(texts_list))]
             batch = self.tokenize_text(batch)
             text_features.append(self.get_embedding(np.array(batch)))
         return np.concatenate(text_features)

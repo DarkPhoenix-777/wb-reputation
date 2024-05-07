@@ -35,20 +35,24 @@ class Model():
         self.model.freeze()
 
 
-    def predict_on_imgs(self, image_names, text_response, image_response):
-        features = self.get_features(text_response, image_response).astype(np.float32)
+    def predict_on_imgs(self, image_names, text_responses, image_responses):
+        features = self.get_features(text_responses, image_responses).astype(np.float32)
         preds = self.model.forward(features).tolist()
         res = []
         for i, name in enumerate(image_names):
             res.append({"image": name, "score": preds[i], "target": preds[i] >= threshold})
         return res
 
-    def get_features(self, text_response, image_response):
+    def get_features(self, text_responses, image_responses):
         """
         Get features from model
 
         Parameters
         ----------
+        text_response
+            response from text encoder
+        image_response
+            response from image encoder
 
         Returns
         -------
@@ -56,7 +60,7 @@ class Model():
             2d array of concatenated images an text embeddings
         """
 
-        text_features = np.asarray(json.loads(text_response.json()))
-        image_features = np.asarray(json.loads(image_response.json()))
+        text_features = np.concatenate([np.asarray(json.loads(text_response.json())) for text_response in text_responses])
+        image_features = np.concatenate([np.asarray(json.loads(image_response.json())) for image_response in image_responses])
 
         return np.concatenate([text_features, image_features], axis=1)

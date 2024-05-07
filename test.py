@@ -9,11 +9,13 @@ url = "http://localhost:8004/prediction"
 
 
 files = [
-    ("files", ("123648868.jpg", open("images/123648868.jpg", "rb"), "image/jpeg")),
     ("files", ("59359031.jpg", open("images/59359031.jpg", "rb"), "image/jpeg")),
+    ("files", ("123152360.jpg", open("images/123152360.jpg", "rb"), "image/jpeg")),
+    ("files", ("123648868.jpg", open("images/123648868.jpg", "rb"), "image/jpeg")),
+    ("files", ("125024830.jpg", open("images/125024830.jpg", "rb"), "image/jpeg")),
 ]
 
-headers = {'Content-Type': 'application/octet-stream'}
+
 response = requests.post(url, files=files)
 
 print(response.status_code)

@@ -8,7 +8,7 @@ from transformers import CLIPImageProcessor, CLIPModel
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class Image_encoder():
-    """get image + text embeddings"""
+    """get image embeddings"""
     def __init__(self,
                  image_preprocessor=CLIPImageProcessor.from_pretrained("openai/clip-vit-base-patch32"),
                  image_model=CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device).eval()) -> None:
@@ -19,9 +19,9 @@ class Image_encoder():
         if device == "cpu":
             print("Warning: CUDA not detected by torch, using CPU")
     
-    def get_img_embeddings(self, imgs_list, batch_size=64):
+    def get_img_embeddings(self, imgs_list = List[np.ndarray], batch_size=64):
         """
-        Get text embeddings for texts from images
+        Get image embeddings
 
         Parameters
         ----------
