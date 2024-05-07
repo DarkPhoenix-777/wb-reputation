@@ -3,23 +3,24 @@ import cv2
 import json
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, File, UploadFile
 from model import OCR
 
 app = FastAPI(debug=True)
 OCR_model = OCR()
 
 
-# @app.post("/ocr")
-# def get_text(image: np.ndarray) -> str:
-#     features = OCR_model.read_text(image)
-#     return json.dumps(features.tolist())
+def read_image(image_bytes: bytes) -> np.ndarray:
+    return cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
 
 @app.post("/ocr")
-def get_text(image_bytes: bytes = Body(bytes)) -> str:
-    image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
-    text = OCR_model.read_text(image)
-    return text
+def get_text(files: List[UploadFile] = File(...)) -> str:
+    contents = [f.file.read() for f in files]
+    names = [f.filename for f in files]
+    content_types = [f.content_type for f in files]
+    images = [read_image(image_bytes) for image_bytes in contents]
+    texts = OCR_model.read_text(images)
+    return texts
 
 
 def main() -> None:

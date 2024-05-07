@@ -91,5 +91,4 @@ class Text_encoder():
             batch = imgs_list[i:min(i+batch_size, len(imgs_list))]
             batch = self.tokenize_text(batch)
             text_features.append(self.get_embedding(np.array(batch)))
-        print(np.concatenate(text_features).shape)
         return np.concatenate(text_features)
