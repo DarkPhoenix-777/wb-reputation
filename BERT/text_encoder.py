@@ -2,17 +2,21 @@ import os
 from typing import Dict, List
 import numpy as np
 import torch
-from transformers import DistilBertModel, DistilBertTokenizer
+from transformers import DistilBertTokenizer
+import onnxruntime
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class Text_encoder():
     """get text embeddings"""
     def __init__(self,
-                 text_model_name: str = "distilbert-base-uncased") -> None:
+                 text_tokenizer: str=DistilBertTokenizer.from_pretrained("distilbert-base-uncased"),
+                 text_model_file="distilbert-base-uncased.onnx") -> None:
 
-        self.tokenizer = DistilBertTokenizer.from_pretrained(text_model_name)
-        self.bert = DistilBertModel.from_pretrained(text_model_name).to(device)
+        self.tokenizer = text_tokenizer
+        self.onnx_session = onnxruntime.InferenceSession(text_model_file,
+                                                         providers=['CUDAExecutionProvider',
+                                                                    'CPUExecutionProvider'])
 
         if device == "cpu":
             print("Warning: CUDA not detected by torch, using CPU")
@@ -36,11 +40,12 @@ class Text_encoder():
         tokenized_texts = []
 
         for text in batch:
-            tokenized_text = self.tokenizer.encode(text, add_special_tokens=True, max_length=max_length, truncation=True)
+            tokenized_text = self.tokenizer.encode(text, add_special_tokens=True, 
+                                                   max_length=max_length, truncation=True)
             tokenized_text += [0 for _ in range(max_length - len(tokenized_text))]
             tokenized_texts.append(tokenized_text)
 
-        return tokenized_texts
+        return np.array(tokenized_texts)
 
 
     def get_embedding(self, tokens: np.ndarray):
@@ -57,15 +62,13 @@ class Text_encoder():
         np.ndarray
             2d array of text embeddings
         """
-        mask = tokens > 0
+        mask = (tokens > 0).astype(np.int64)
 
-        tokens = torch.tensor(tokens).to(device)
-        mask = torch.tensor(mask).to(device)
+        last_hidden_states = self.onnx_session.run(["last_hidden_state"],
+                                                   {"input_ids": tokens.astype(np.int64),
+                                                     "attention_mask": mask})
 
-        with torch.no_grad():
-            last_hidden_states = self.bert(tokens, attention_mask=mask)
-
-        features = last_hidden_states[0][:, 0, :].cpu().numpy()
+        features = last_hidden_states[0][:, 0, :]
 
         return features
 

@@ -1,4 +1,6 @@
 images
 __pycache__
-nn_model.ckpt
+classifier.onnx
+clip_image_encoder.onnx
+distilbert-base-uncased.onnx
 dev_run.bat

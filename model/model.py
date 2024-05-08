@@ -2,46 +2,37 @@ import os
 import json
 import numpy as np
 import cv2
+import onnxruntime
 import torch
-from torch import nn
-from torch.utils.data import DataLoader
-import pytorch_lightning as pl
+
 
 threshold = 0.5
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-class Classifier(pl.LightningModule):
-    def __init__(self) -> None:
-        super().__init__()
-        self.layers = nn.Sequential(
-            nn.Linear(1280, 512),
-            nn.LeakyReLU(0.1),
-            nn.Dropout(p=0.5),
-            nn.Linear(512, 1),
-            nn.Sigmoid()
-        )
-
-    def forward(self, x):
-        self.layers.eval()
-        x = torch.tensor(x).to(device)
-        with torch.no_grad():
-            preds = self.layers(x)
-        return np.concatenate(preds.cpu().numpy())
-
 
 class Model():
-    def __init__(self) -> None:
-        self.model = Classifier.load_from_checkpoint(checkpoint_path="nn_model.ckpt")
-        self.model.freeze()
+    def __init__(self, model_file: str="classifier.onnx") -> None:
+        self.onnx_session = onnxruntime.InferenceSession(model_file,
+                                                         providers=['CUDAExecutionProvider',
+                                                                    'CPUExecutionProvider'])
 
 
-    def predict_on_imgs(self, image_names, text_responses, image_responses):
+    def predict_on_imgs(self, image_names, text_responses, image_responses, batch_size=512):
         features = self.get_features(text_responses, image_responses).astype(np.float32)
-        preds = self.model.forward(features).tolist()
+
+        preds = []
+
+        for i in range(0, len(features), batch_size):
+            batch = features[i:min(i+batch_size, len(features))]
+            preds.extend(self.onnx_session.run(None, {'input': batch})[0])
+
+        preds = np.concatenate(preds).tolist()
+
         res = []
         for i, name in enumerate(image_names):
             res.append({"image": name, "score": preds[i], "target": preds[i] >= threshold})
         return res
+
 
     def get_features(self, text_responses, image_responses):
         """
