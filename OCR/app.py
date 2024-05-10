@@ -1,17 +1,21 @@
 from typing import Dict, List
+import os
 import cv2
 import json
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, Body, File, UploadFile
+from fastapi import FastAPI, Body, File, UploadFile, status
 from model import OCR
 
-app = FastAPI(debug=True)
+DEBUG = os.environ.get("DEBUG", False) in ("True", "true")
+
+app = FastAPI(debug=DEBUG)
 OCR_model = OCR()
 
 
 def read_image(image_bytes: bytes) -> np.ndarray:
     return cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+
 
 @app.post("/ocr")
 def get_text(files: List[UploadFile] = File(...)) -> str:
@@ -23,9 +27,14 @@ def get_text(files: List[UploadFile] = File(...)) -> str:
     return texts
 
 
+@app.get("/test")
+def test():
+    return status.HTTP_200_OK
+
+
 def main() -> None:
     """Run application"""
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=DEBUG)
 
 
 if __name__ == "__main__":
