@@ -35,17 +35,17 @@ def get_prediction(files: List[UploadFile] = File(...)) -> str:
     return res
 
 def send_image_features_request(files: List[Tuple[str, Tuple]]) -> requests.Response:
-    image_response = requests.post("http://localhost:8002/image_encoder", files=files)
+    image_response = requests.post("http://image_encoder:8002/image_encoder", files=files)
     return image_response
 
 def send_text_features_request(files: List[Tuple[str, Tuple]]) -> requests.Response:
-    texts = requests.post("http://localhost:8000/ocr", files=files)
-    text_response = requests.post("http://localhost:8001/text_encoder", data=texts)
+    texts = requests.post("http://ocr:8000/ocr", files=files)
+    text_response = requests.post("http://text_encoder:8001/text_encoder", data=texts)
     return text_response
 
 def main() -> None:
     """Run application"""
-    uvicorn.run("app:app", host="localhost", port=8004, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8004, reload=True)
 
 
 if __name__ == "__main__":
