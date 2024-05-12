@@ -5,7 +5,6 @@ import uvicorn
 from fastapi import Body, FastAPI, File, UploadFile, status
 from models.pipeline import Pipeline
 from utils.data_models import PredictionResult
-from utils.download_models import download_model
 
 
 DEBUG = os.environ.get("DEBUG", False) in ("True", "true")
@@ -16,9 +15,7 @@ pipeline = dict()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    res = await check_models()
-    if res:
-        pipeline["main_pipline"] = Pipeline()
+    pipeline["main_pipline"] = Pipeline()
     yield
     pipeline.clear()
 
@@ -44,20 +41,6 @@ async def get_prediction_batch(files: Annotated[List[UploadFile], File()]) -> Li
 async def test():
     """For connection check"""
     return status.HTTP_200_OK
-
-
-async def check_models() -> None:
-    """Проверка на наличие моделей + скачивание"""
-    if not os.path.isfile("models/models_onnx/distilbert-base-uncased.onnx"):
-        print("Text encoder not found. Downloading")
-        download_model("distilbert-base-uncased")
-    if not os.path.isfile("models/models_onnx/clip_image_encoder.onnx"):
-        print("Image encoder not found. Downloading")
-        download_model("clip_image_encoder")
-    if not os.path.isfile("models/models_onnx/classifier.onnx"):
-        print("Classifier not found. Downloading")
-        download_model("classifier")
-    return True
 
 
 def main() -> None:

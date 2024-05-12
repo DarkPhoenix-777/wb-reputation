@@ -1,4 +1,5 @@
 import io
+import os
 from typing import Dict, List, Optional, Tuple
 import numpy as np
 import torch
@@ -9,6 +10,7 @@ from models.text_encoder import TextEncoder
 from models.image_encoder import ImageEncoder
 from models.classifier import Classifier
 from utils.data_models import PredictionResult
+from utils.download_models import download_model
 
 
 THRESHOLD = 0.5
@@ -22,6 +24,17 @@ class Pipeline():
         else:
             providers = ["CPUExecutionProvider"]
             print("Warning CUDA not detected by torch")
+
+        # Проверка на наличие моделей + скачивание
+        if not os.path.isfile("models_onnx/distilbert-base-uncased.onnx"):
+            print("Text encoder not found")
+            download_model("distilbert-base-uncased")
+        if not os.path.isfile("models_onnx/clip_image_encoder.onnx"):
+            print("Image encoder not found")
+            download_model("clip_image_encoder")
+        if not os.path.isfile("models_onnx/classifier.onnx"):
+            print("Classifier not found")
+            download_model("classifier")
 
         self.ocr = OCR()
         self.text_encoder = TextEncoder(providers=providers)
