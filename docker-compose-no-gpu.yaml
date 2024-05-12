@@ -11,12 +11,6 @@ services:
     environment:
       DEBUG: false
     deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
       restart_policy:
         condition: on-failure
         delay: 5s

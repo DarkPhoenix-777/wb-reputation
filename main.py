@@ -16,7 +16,7 @@ pipeline = dict()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    check_models()
+    await check_models()
     pipeline["main_pipline"] = Pipeline()
     yield
     pipeline.clear()
@@ -45,7 +45,7 @@ async def test():
     return status.HTTP_200_OK
 
 
-def check_models() -> None:
+async def check_models() -> None:
     """Проверка на наличие моделей + скачивание"""
     if not os.path.isfile("models/models_onnx/distilbert-base-uncased.onnx"):
         print("Text encoder not found. Downloading")
@@ -56,6 +56,7 @@ def check_models() -> None:
     if not os.path.isfile("models/models_onnx/classifier.onnx"):
         print("Classifier not found. Downloading")
         download_model("classifier")
+    return True
 
 
 def main() -> None:
