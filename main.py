@@ -16,8 +16,9 @@ pipeline = dict()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    await check_models()
-    pipeline["main_pipline"] = Pipeline()
+    res = await check_models()
+    if res:
+        pipeline["main_pipline"] = Pipeline()
     yield
     pipeline.clear()
 

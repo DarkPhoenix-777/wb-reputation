@@ -4,7 +4,7 @@ services:
   api:
     image: darkphoenix777/api
     build: .
-    container_name: darkphoenix777/api
+    container_name: api
     ports:
       - 8000:8000
     restart: on
