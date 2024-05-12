@@ -1,10 +1,10 @@
 version: '3.5'
 
 services:
-  ocr:
-    image: ocr
-    build: ./OCR
-    container_name: ocr
+  api:
+    image: api
+    build: .
+    container_name: api
     ports:
       - 8000:8000
     environment:
@@ -16,67 +16,3 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    networks:
-      - my_network
-  text_encoder:
-    image: bert
-    build: ./BERT
-    container_name: text_encoder
-    ports:
-      - 8001:8001
-    environment:
-      DEBUG: false
-    depends_on:
-      - ocr
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    networks:
-      - my_network
-  image_encoder:
-    image: clip
-    build: ./CLIP_image_encoder
-    container_name: image_encoder
-    ports:
-      - 8002:8002
-    environment:
-      DEBUG: false
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    networks:
-      - my_network
-  model:
-    image: classifier
-    build: ./model
-    container_name: model
-    ports:
-      - 8004:8004
-    environment:
-      DEBUG: false
-      MAX_IMAGES_IN_REQUEST: 2 #-1 for unlimited
-    depends_on:
-      - ocr
-      - text_encoder
-      - image_encoder
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    networks:
-      - my_network
-
-networks:
-  my_network:
-    driver: bridge

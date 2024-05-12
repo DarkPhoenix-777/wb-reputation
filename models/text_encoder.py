@@ -5,21 +5,18 @@ import torch
 from transformers import DistilBertTokenizer
 import onnxruntime
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
-class Text_encoder():
+class TextEncoder():
     """get text embeddings"""
     def __init__(self,
-                 text_tokenizer: str=DistilBertTokenizer.from_pretrained("distilbert-base-uncased"),
-                 text_model_file="distilbert-base-uncased.onnx") -> None:
+                 text_tokenizer=DistilBertTokenizer.from_pretrained("distilbert-base-uncased"),
+                 text_model_file="models/models_onnx/distilbert-base-uncased.onnx",
+                 providers=None) -> None:
+
 
         self.tokenizer = text_tokenizer
         self.onnx_session = onnxruntime.InferenceSession(text_model_file,
-                                                         providers=['CUDAExecutionProvider',
-                                                                    'CPUExecutionProvider'])
-
-        if device == "cpu":
-            print("Warning: CUDA not detected by torch, using CPU")
+                                                         providers=providers)
 
 
     def tokenize_text(self, batch: List[str]) -> List[np.ndarray]:
@@ -48,7 +45,7 @@ class Text_encoder():
         return np.array(tokenized_texts)
 
 
-    def get_embedding(self, tokens: np.ndarray):
+    def get_embedding(self, tokens: np.ndarray) -> np.ndarray:
         """
         Get text embeddings for tokens
 
@@ -90,8 +87,10 @@ class Text_encoder():
             2d array of text embeddings
         """
         text_features = []
+
         for i in range(0, len(texts_list), batch_size):
             batch = texts_list[i:min(i+batch_size, len(texts_list))]
             batch = self.tokenize_text(batch)
             text_features.append(self.get_embedding(np.array(batch)))
+
         return np.concatenate(text_features)

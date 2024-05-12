@@ -6,22 +6,17 @@ from transformers import CLIPImageProcessor
 import onnxruntime
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-class Image_encoder():
+class ImageEncoder():
     """get image embeddings"""
     def __init__(self,
                  image_preprocessor=CLIPImageProcessor\
                                     .from_pretrained("openai/clip-vit-base-patch32"),
-                 image_model_file="clip_image_encoder.onnx") -> None:
+                 image_model_file="models/models_onnx/clip_image_encoder.onnx",
+                 providers=None) -> None:
 
         self.image_preprocessor = image_preprocessor
         self.onnx_session = onnxruntime.InferenceSession(image_model_file,
-                                                         providers=['CUDAExecutionProvider',
-                                                                    'CPUExecutionProvider'])
-
-        if device == "cpu":
-            print("Warning: CUDA not detected by torch, using CPU")
+                                                         providers=providers)
 
 
     def get_img_embeddings(self, imgs_list = List[np.ndarray], batch_size=64):
@@ -41,6 +36,7 @@ class Image_encoder():
             2d array of images embeddings
         """
         image_features = []
+
         for i in range(0, len(imgs_list), batch_size):
             batch = imgs_list[i:min(i+batch_size, len(imgs_list))]
             inputs = self.image_preprocessor(images=batch)["pixel_values"]

@@ -5,16 +5,11 @@ import torch
 import easyocr
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
 class OCR():
     """read texts from image"""
     def __init__(self, reader = easyocr.Reader(lang_list=["en", "ru"])) -> None:
 
         self.reader = reader
-
-        if device == "cpu":
-            print("Warning: CUDA not detected by torch, using CPU")
 
     def read_text(self, images: List[np.ndarray], batch_size=64) -> List[str]:
         """
