@@ -14,7 +14,10 @@ from utils.download_models import download_model
 
 
 THRESHOLD = 0.5
-
+OCR_BATCH_SIZE = int(os.environ.get("OCR_BATCH_SIZE", 64))
+TEXT_ENCODER_BATCH_SIZE = int(os.environ.get("TEXT_ENCODER_BATCH_SIZE", 64))
+IMAGE_ENCODER_BATCH_SIZE = int(os.environ.get("IMAGE_ENCODER_BATCH_SIZE", 64))
+CLASSIFIER_BATCH_SIZE = int(os.environ.get("CLASSIFIER_BATCH_SIZE", 512))
 
 class Pipeline():
     """pipeline"""
@@ -36,10 +39,10 @@ class Pipeline():
             print("Classifier not found")
             download_model("classifier")
 
-        self.ocr = OCR()
-        self.text_encoder = TextEncoder(providers=providers)
-        self.image_encoder = ImageEncoder(providers=providers)
-        self.classifier = Classifier(providers=providers)
+        self.ocr = OCR(batch_size=OCR_BATCH_SIZE)
+        self.text_encoder = TextEncoder(providers=providers, batch_size=TEXT_ENCODER_BATCH_SIZE)
+        self.image_encoder = ImageEncoder(providers=providers, batch_size=IMAGE_ENCODER_BATCH_SIZE)
+        self.classifier = Classifier(providers=providers, batch_size=CLASSIFIER_BATCH_SIZE)
 
     @staticmethod
     def read_image(image_bytes: bytes) -> np.ndarray:

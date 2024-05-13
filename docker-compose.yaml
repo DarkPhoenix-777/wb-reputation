@@ -10,6 +10,10 @@ services:
     restart: on
     environment:
       DEBUG: false
+      OCR_BATCH_SIZE: 64
+      TEXT_ENCODER_BATCH_SIZE: 64
+      IMAGE_ENCODER_BATCH_SIZE: 64
+      CLASSIFIER_BATCH_SIZE: 512
     deploy:
       resources:
         reservations:

@@ -9,11 +9,12 @@ import onnxruntime
 class TextEncoder():
     """get text embeddings"""
     def __init__(self,
-                 text_tokenizer=DistilBertTokenizer.from_pretrained("distilbert-base-uncased"),
-                 text_model_file="models/models_onnx/distilbert-base-uncased.onnx",
-                 providers=None) -> None:
+                 text_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased"),
+                 text_model_file: str = "models/models_onnx/distilbert-base-uncased.onnx",
+                 providers: List[str] = None,
+                 batch_size: int = 64) -> None:
 
-
+        self.batch_size = batch_size if batch_size > 0 else 64
         self.tokenizer = text_tokenizer
         self.onnx_session = onnxruntime.InferenceSession(text_model_file,
                                                          providers=providers)
@@ -70,7 +71,7 @@ class TextEncoder():
         return features
 
 
-    def get_text_embeddings(self, texts_list: List[str], batch_size=64) -> np.ndarray:
+    def get_text_embeddings(self, texts_list: List[str]) -> np.ndarray:
         """
         Get text embeddings for texts from images
 
@@ -78,8 +79,6 @@ class TextEncoder():
         ----------
         texts_list : List[str]
             list of texts
-        batch_size : int
-            batch size for text model
 
         Returns
         -------
@@ -88,8 +87,8 @@ class TextEncoder():
         """
         text_features = []
 
-        for i in range(0, len(texts_list), batch_size):
-            batch = texts_list[i:min(i+batch_size, len(texts_list))]
+        for i in range(0, len(texts_list), self.batch_size):
+            batch = texts_list[i:min(i+self.batch_size, len(texts_list))]
             batch = self.tokenize_text(batch)
             text_features.append(self.get_embedding(np.array(batch)))
 
