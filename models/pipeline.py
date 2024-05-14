@@ -10,7 +10,6 @@ from models.text_encoder import TextEncoder
 from models.image_encoder import ImageEncoder
 from models.classifier import Classifier
 from utils.data_models import PredictionResult
-from utils.download_models import download_model
 
 
 THRESHOLD = 0.5
@@ -27,17 +26,6 @@ class Pipeline():
         else:
             providers = ["CPUExecutionProvider"]
             print("Warning CUDA not detected by torch")
-
-        # Проверка на наличие моделей + скачивание
-        if not os.path.isfile("models_onnx/distilbert-base-uncased.onnx"):
-            print("Text encoder not found")
-            download_model("distilbert-base-uncased")
-        if not os.path.isfile("models_onnx/clip_image_encoder.onnx"):
-            print("Image encoder not found")
-            download_model("clip_image_encoder")
-        if not os.path.isfile("models_onnx/classifier.onnx"):
-            print("Classifier not found")
-            download_model("classifier")
 
         self.ocr = OCR(batch_size=OCR_BATCH_SIZE)
         self.text_encoder = TextEncoder(providers=providers, batch_size=TEXT_ENCODER_BATCH_SIZE)
@@ -71,13 +59,7 @@ class Pipeline():
         if image_names is None:
             image_names = range(len(contents))
 
-        contents = [self.read_image(content) for content in contents]
-
-        texts = self.ocr.read_text(contents)
-        texts_features = self.text_encoder.get_text_embeddings(texts)
-        image_features = self.image_encoder.get_img_embeddings(contents)
-
-        features = self.get_features(texts_features, image_features).astype(np.float32)
+        features = self.get_features(contents)
 
         probabilities = self.classifier.predict(features).tolist()
 
@@ -90,16 +72,14 @@ class Pipeline():
 
 
 
-    def get_features(self, text_features: np.ndarray, image_features: np.ndarray) -> np.ndarray:
+    def get_features(self, contents: List[bytes]) -> np.ndarray:
         """
         Get features for model + shape checks
 
         Parameters
         ----------
-        text_features: np.ndarray
-            features from text_encoder, shape: (n_images, 768)
-        image_features: np.ndarray
-            features from image encoder, shape: (n_images, 512)
+        contents: List[bytes]
+            images in bytes
 
         Returns
         -------
@@ -107,11 +87,17 @@ class Pipeline():
             2d array of concatenated images an text embeddings, shape: (n_images, 1280)
         """
 
-        assert text_features.shape[1] == 768, \
+        contents = [self.read_image(content) for content in contents]
+
+        texts = self.ocr.read_text(contents)
+        texts_features = self.text_encoder.get_text_embeddings(texts)
+        image_features = self.image_encoder.get_img_embeddings(contents)
+
+        assert texts_features.shape[1] == 768, \
             ValueError("Text features has incorrect shape on axis 1")
         assert image_features.shape[1] == 512, \
             ValueError("Image features has incorrect shape on axis 1")
-        assert text_features.shape[0] == image_features.shape[0], \
+        assert texts_features.shape[0] == image_features.shape[0], \
             ValueError("Image and text features has different length")
 
-        return np.concatenate([text_features, image_features], axis=1)
+        return np.concatenate([texts_features, image_features], axis=1).astype(np.float32)

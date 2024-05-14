@@ -3,9 +3,10 @@ from typing import Dict, List, Tuple, Annotated
 import os
 import uvicorn
 from fastapi import Body, FastAPI, File, UploadFile, status
+
 from models.pipeline import Pipeline
 from utils.data_models import PredictionResult
-
+from utils.download_models import download_model
 
 DEBUG = os.environ.get("DEBUG", False) in ("True", "true")
 
@@ -45,6 +46,19 @@ async def test():
 
 def main() -> None:
     """Run application"""
+
+    # Проверка на наличие моделей + скачивание
+    if not os.path.isfile("models/models_onnx/distilbert-base-uncased.onnx"):
+        print("Text encoder not found")
+        download_model("distilbert-base-uncased")
+    if not os.path.isfile("models/models_onnx/clip_image_encoder.onnx"):
+        print("Image encoder not found")
+        download_model("clip_image_encoder")
+    if not os.path.isfile("models/models_onnx/classifier.onnx"):
+        print("Classifier not found")
+        download_model("classifier")
+
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=DEBUG)
 
 

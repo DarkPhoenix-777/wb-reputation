@@ -20,7 +20,7 @@ def test_single_image() -> None:
     img = [image_to_byte_array(Image.open("tests/test_images/" + img_name))]
     pred = pipeline.predict_on_bytes(img)
 
-    assert pred[0].isinstance(PredictionResult), "Result has incorrect type"
+    assert isinstance(pred[0], PredictionResult), "Result has incorrect type"
     assert not pred[0].verdict, "Result has incorrect prediction"
 
 
@@ -31,7 +31,7 @@ def test_multiple_images() -> None:
     imgs = [image_to_byte_array(Image.open("tests/test_images/" + img_name)) for img_name in img_names]
     pred = pipeline.predict_on_bytes(imgs)
 
-    assert pred[0].isinstance(PredictionResult), "Result has incorrect type"
-    assert pred[1].isinstance(PredictionResult), "Result has incorrect type"
+    assert isinstance(pred[0],PredictionResult), "Result has incorrect type"
+    assert isinstance(pred[1],PredictionResult), "Result has incorrect type"
     assert not pred[0].verdict, "Result has incorrect prediction"
     assert pred[1].verdict, "Result has incorrect prediction"
