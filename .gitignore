@@ -1,7 +1,0 @@
-images
-__pycache__
-.pytest_cache
-classifier.onnx
-clip_image_encoder.onnx
-distilbert-base-uncased.onnx
-dev_run.bat
