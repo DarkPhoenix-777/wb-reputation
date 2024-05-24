@@ -1,0 +1,38 @@
+version: '3.5'
+
+services:
+  api:
+    image: darkphoenix777/api
+    build: .
+    container_name: api
+    ports:
+      - 8000:8000
+    restart: on
+    volumes:
+      - data:/app/data
+      - onnx_models:/app/models/models_onnx
+    environment:
+      DEBUG: false
+      ALLOW_TRAIN: True
+      OCR_BATCH_SIZE: 64
+      TEXT_ENCODER_BATCH_SIZE: 64
+      IMAGE_ENCODER_BATCH_SIZE: 64
+      CLASSIFIER_BATCH_SIZE: 512
+      CLASSIFIER_TRAIN_BATCH_SIZE: 512
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+volumes:
+  data:
+    name: data
+  onnx_models:
+    name: onnx_models

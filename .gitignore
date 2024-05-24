@@ -1,0 +1,6 @@
+data/images/*
+data/images_data.csv
+__pycache__
+.pytest_cache
+models/models_onnx/*.onnx
+dev_run.bat
